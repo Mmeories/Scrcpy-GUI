@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <HTA:APPLICATION
+    ID="ScrcpyNeumorphicSingleApp"
+    APPLICATIONNAME="Scrcpy 新拟态远控助手"
+    BORDER="dialog"
+    BORDERSTYLE="normal"
+    CAPTION="yes"
+    MAXIMIZEBUTTON="no"
+    MINIMIZEBUTTON="yes"
+    SCROLL="no"
+    SHOWINTASKBAR="yes"
+    SINGLEINSTANCE="yes"
+    SYSMENU="yes"
+    VERSION="3.2.0"
+    WINDOWSTATE="normal"
+  />
+  <meta http-equiv="x-ua-compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrcpy 新拟态远控助手 — 单窗口独立桌面版</title>
+  <style>
+    :root {
+      --bg-main: #E4EBF5;
+      --bg-panel: #EBF1F8;
+      --text-primary: #2B3A4E;
+      --text-secondary: #7E8FA6;
+      --accent-orange: #F27A24;
+      --accent-blue: #3B82F6;
+      --accent-green: #10B981;
+      --accent-rose: #F43F5E;
+      --accent-purple: #8B5CF6;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", -apple-system, sans-serif;
+      background: linear-gradient(145deg, #DCE5F2 0%, #EBF1F8 55%, #D5E0EE 100%);
+      color: #2B3A4E;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Self-contained Utility Classes (Zero CDN Dependency!) */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .inline-flex { display: inline-flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .items-end { align-items: flex-end; }
+    .items-baseline { align-items: baseline; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .justify-end { justify-content: flex-end; }
+    .flex-1 { flex: 1 1 0%; }
+    .w-full { width: 100%; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .text-center { text-align: center; }
+    .break-all { word-break: break-all; }
+    .select-all { user-select: all; }
+    .select-text { user-select: text; }
+    .cursor-pointer { cursor: pointer; }
+    .pointer-events-none { pointer-events: none; }
+
+    /* Grid utilities with IE11/MSHTA Flexbox fallback */
+    .grid-5 {
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-5 > * {
+      width: 18.2%;
+    }
+    .grid-4 {
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-4 > * {
+      width: 23.6%;
+    }
+    .grid-6 {
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-6 > * {
+      width: 15.2%;
+    }
+    .grid-3 {
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-3 > * {
+      width: 31.8%;
+    }
+
+    /* Single App Window Shell */
+    .app-window {
+      width: 100%;
+      max-width: 432px;
+      background: #EBF1F8;
+      border-radius: 34px;
+      box-shadow: 18px 18px 38px #C2CEE0, -18px -18px 38px #FFFFFF;
+      border: 1.5px solid rgba(255, 255, 255, 0.78);
+      padding: 22px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Neumorphic Surfaces */
+    .neu-card {
+      background: #EBF1F8;
+      border-radius: 20px;
+      box-shadow: 7px 7px 15px #CBD6E6, -7px -7px 15px #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .neu-inset {
+      background: #EBF1F8;
+      border-radius: 15px;
+      box-shadow: inset 4px 4px 9px #CBD6E6, inset -4px -4px 9px #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .neu-btn {
+      background: #EBF1F8;
+      border-radius: 15px;
+      box-shadow: 5px 5px 11px #CBD6E6, -5px -5px 11px #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      color: #7E8FA6;
+      transition: all 0.16s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+      padding: 8px 12px;
+    }
+
+    .neu-btn:hover {
+      color: #2B3A4E;
+      box-shadow: 7px 7px 14px #C3CFE0, -7px -7px 14px #FFFFFF;
+    }
+
+    .neu-btn:active, .neu-btn.active {
+      box-shadow: inset 4px 4px 8px #C8D4E3, inset -4px -4px 8px #FFFFFF;
+      color: #2B3A4E;
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .neu-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: #EBF1F8;
+      box-shadow: 4px 4px 9px #CBD6E6, -4px -4px 9px #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7E8FA6;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    /* Circular Dial like 16°C Reference */
+    .neu-dial-outer {
+      width: 196px;
+      height: 196px;
+      border-radius: 50%;
+      background: #EBF1F8;
+      box-shadow: 12px 12px 24px #C5D1E2, -12px -12px 24px #FFFFFF, inset 2px 2px 5px #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 4px auto 8px;
+    }
+
+    .neu-dial-inner {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: #EBF1F8;
+      box-shadow: inset 7px 7px 14px #CBD6E6, inset -7px -7px 14px #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    /* Neumorphic Pill Switch */
+    .neu-switch {
+      width: 52px;
+      height: 28px;
+      border-radius: 999px;
+      background: #EBF1F8;
+      box-shadow: inset 4px 4px 8px #C8D4E3, inset -4px -4px 8px #FFFFFF;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .neu-switch-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #F4F7FB;
+      box-shadow: 2px 2px 5px #B8C6D8, -1px -1px 3px #FFFFFF;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: all 0.25s ease;
+    }
+
+    .neu-switch.checked .neu-switch-thumb {
+      left: 27px;
+      background: #F27A24;
+      box-shadow: 0 2px 8px rgba(242, 122, 36, 0.45);
+    }
+
+    /* Range Slider + IE/MSHTA Custom Track */
+    input[type=range].neu-range {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 10px;
+      border-radius: 999px;
+      background: #EBF1F8;
+      box-shadow: inset 3px 3px 6px #C8D4E3, inset -3px -3px 6px #FFFFFF;
+      outline: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    input[type=range].neu-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #F27A24;
+      box-shadow: 2px 2px 6px rgba(242, 122, 36, 0.4), -2px -2px 5px #FFFFFF;
+      cursor: pointer;
+      border: 3px solid #F5F8FC;
+    }
+
+    input[type=range].neu-range::-ms-track {
+      width: 120px;
+      height: 8px;
+      background: transparent;
+      border-color: transparent;
+      color: transparent;
+    }
+    input[type=range].neu-range::-ms-fill-lower {
+      background: #F27A24;
+      border-radius: 999px;
+    }
+    input[type=range].neu-range::-ms-fill-upper {
+      background: #DCE5F2;
+      border-radius: 999px;
+    }
+    input[type=range].neu-range::-ms-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #F27A24;
+      border: 2px solid #FFFFFF;
+      cursor: pointer;
+    }
+
+    .neu-input {
+      background: #EBF1F8;
+      border-radius: 12px;
+      box-shadow: inset 3px 3px 7px #CBD6E6, inset -3px -3px 7px #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      color: #2B3A4E;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      outline: none;
+      user-select: text;
+    }
+
+    .row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 12px;
+    }
+
+    .row-label {
+      color: #7E8FA6;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2B3A4E;
+      margin-bottom: 8px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #10B981;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .status-dot.warn {
+      background: #F59E0B;
+    }
+
+    .status-dot.err {
+      background: #F43F5E;
+    }
+
+    svg {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  </style>
+  <script>
+    window.onerror = function() { return true; };
+  </script>
+</head>
+<body>
+
+  <!-- SINGLE UNIFIED DESKTOP WINDOW (432px Portrait Soft UI Controller) -->
+  <div class="app-window">
+
+    <!-- Top Status & Device Bar -->
+    <div class="flex items-center justify-between" style="margin-bottom: 12px;">
+      <button id="btnScanDevices" type="button" class="neu-btn" style="width: 38px; height: 38px; padding: 0;" title="扫描真实连接的安卓设备 (adb devices)">
+        <svg width="16" height="16" fill="none" stroke="#2B3A4E" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+
+      <div class="flex items-center">
+        <span id="adbStatusDot" class="status-dot"></span>
+        <select id="deviceSelector" aria-label="选择安卓设备" class="neu-input" style="min-width: 215px;">
+          <option value="">正在检测真实 ADB 设备...</option>
+        </select>
+      </div>
+
+      <button id="btnTogglePathModal" type="button" class="neu-btn" style="width: 38px; height: 38px; padding: 0;" title="设置或一键自动下载 scrcpy.exe 与 adb.exe">
+        <svg width="16" height="16" fill="none" stroke="#7E8FA6" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Greeting & Active Device Header (Matches Reference "Hello! / My Home") -->
+    <div class="flex items-end justify-between" style="margin-bottom: 14px; padding: 0 4px;">
+      <div>
+        <div id="subGreetingText" style="font-size: 12px; font-weight: 600; color: #7E8FA6;">你好！独立远控终端</div>
+        <div id="currentDeviceName" style="font-size: 22px; font-weight: 800; color: #2B3A4E; margin-top: 2px;">我的安卓设备</div>
+      </div>
+      <span id="deviceAndroidVer" class="neu-inset" style="font-size: 11px; font-weight: 700; padding: 5px 10px; color: #3B82F6;">等待设备连接</span>
+    </div>
+
+    <!-- 5 Neumorphic Navigation Icons Row (Matches Reference 5 Icon Buttons) -->
+    <div class="grid-5" style="margin-bottom: 16px;" role="tablist" aria-label="主功能导航">
+      <button type="button" data-view="home" class="nav-view-btn neu-btn active flex-col" style="height: 48px; padding: 4px 0;" title="核心投屏主控">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="12" rx="2" />
+          <path d="M8 20h8M12 16v4" stroke-linecap="round" />
+        </svg>
+        <span style="font-size: 10px; margin-top: 2px;">主控</span>
+      </button>
+      <button type="button" data-view="params" class="nav-view-btn neu-btn flex-col" style="height: 48px; padding: 4px 0;" title="画质与控制参数">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+        <span style="font-size: 10px; margin-top: 2px;">参数</span>
+      </button>
+      <button type="button" data-view="wireless" class="nav-view-btn neu-btn flex-col" style="height: 48px; padding: 4px 0;" title="无线调试与音频">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0" />
+        </svg>
+        <span style="font-size: 10px; margin-top: 2px;">无线</span>
+      </button>
+      <button type="button" data-view="record" class="nav-view-btn neu-btn flex-col" style="height: 48px; padding: 4px 0;" title="录屏/相机/外设">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="12" cy="12" r="3" fill="currentColor" />
+        </svg>
+        <span style="font-size: 10px; margin-top: 2px;">录制</span>
+      </button>
+      <button type="button" data-view="monitor" class="nav-view-btn neu-btn flex-col" style="height: 48px; padding: 4px 0;" title="设备状态与终端">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span style="font-size: 10px; margin-top: 2px;">监控</span>
+      </button>
+    </div>
+
+    <!-- ==================== VIEW 1: 主控 (Core Dial + Resolution + Bitrate + Hardware Keys) ==================== -->
+    <div id="viewPanel-home" class="view-panel">
+      <!-- Center Circular FPS Dial (1:1 Reference Style) -->
+      <div class="relative" style="margin-bottom: 14px;">
+        <div class="neu-dial-outer" id="fpsDialContainer">
+          <svg class="absolute inset-0 w-full pointer-events-none" width="196" height="196" viewBox="0 0 196 196" style="transform: rotate(-90deg);">
+            <circle cx="98" cy="98" r="84" fill="none" stroke="#DCE5F2" stroke-width="7" />
+            <circle id="dialProgressCircle" cx="98" cy="98" r="84" fill="none" stroke="#3B82F6" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="528" stroke-dashoffset="132" />
+          </svg>
+          <div class="neu-dial-inner" id="btnCycleFps" title="点击切换目标最大帧率 (30 / 60 / 90 / 120 / 144 帧/秒)">
+            <div class="flex items-start" style="line-height: 1;">
+              <span id="dialMainValue" style="font-size: 38px; font-weight: 800; color: #2B3A4E;">60</span>
+              <span style="font-size: 11px; font-weight: 700; color: #7E8FA6; margin-left: 4px; margin-top: 4px;">帧/秒</span>
+            </div>
+            <div class="flex items-center" style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #7E8FA6;">
+              <svg width="14" height="14" fill="none" stroke="#3B82F6" stroke-width="2.2" viewBox="0 0 24 24" style="margin-right: 4px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span id="dialSubLabel">超低延迟</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-center" style="font-size: 11px; color: #7E8FA6;">
+          点击圆盘切换帧率 · 当前编码 <span id="dialCodecBadge" style="font-weight: 700; color: #2B3A4E;">标准超清 H.264</span>
+        </div>
+      </div>
+
+      <!-- Card 1: Resolution -->
+      <div class="neu-card flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="neu-icon-box">
+            <svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #2B3A4E;">画面分辨率</div>
+            <div id="cardResLabel" style="font-size: 11px; font-weight: 600; color: #7E8FA6; margin-top: 2px;">1080P 超清 (最大 1920)</div>
+          </div>
+        </div>
+        <select id="selectMaxSize" aria-label="最大分辨率限制" class="neu-input">
+          <option value="0">原始分辨率</option>
+          <option value="1280">720P (1280)</option>
+          <option value="1920" selected>1080P (1920)</option>
+          <option value="2560">2K (2560)</option>
+        </select>
+      </div>
+
+      <!-- Card 2: Bitrate (With -/+ Buttons & Slider so it looks great in every Windows host) -->
+      <div class="neu-card flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="neu-icon-box">
+            <svg width="20" height="20" fill="none" stroke="#F27A24" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+            </svg>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #2B3A4E;">视频传输码率</div>
+            <div id="cardBitrateLabel" style="font-size: 11px; font-weight: 600; color: #7E8FA6; margin-top: 2px;">20 兆比特/秒</div>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <button id="btnBitrateDown" type="button" class="neu-btn" style="width: 28px; height: 28px; padding: 0; font-size: 14px;" title="降低码率">-</button>
+          <select id="selectBitratePreset" aria-label="视频码率选择" class="neu-input" style="margin: 0 6px; padding: 5px 8px;">
+            <option value="4">4M (省流)</option>
+            <option value="8">8M (标准)</option>
+            <option value="16">16M (高清)</option>
+            <option value="20" selected>20M (超清)</option>
+            <option value="32">32M (极清)</option>
+            <option value="64">64M (原画)</option>
+          </select>
+          <button id="btnBitrateUp" type="button" class="neu-btn" style="width: 28px; height: 28px; padding: 0; font-size: 14px;" title="提高码率">+</button>
+        </div>
+      </div>
+
+      <!-- Real Device Action Buttons (APK Install, File Push, Screenshot, Turn Screen Off) -->
+      <div class="grid-4" style="margin-bottom: 10px;">
+        <button id="btnInstallApk" type="button" class="neu-btn" style="padding: 8px 4px; color: #2B3A4E;" title="选择本地 APK 安装到手机">
+          <svg width="14" height="14" fill="none" stroke="#F27A24" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          装应用
+        </button>
+        <button id="btnPushFile" type="button" class="neu-btn" style="padding: 8px 4px; color: #2B3A4E;" title="选择本地文件推送至手机 Download 目录">
+          <svg width="14" height="14" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          传文件
+        </button>
+        <button id="btnScreenshot" type="button" class="neu-btn" style="padding: 8px 4px; color: #2B3A4E;" title="调用 adb exec-out screencap 截屏保存到电脑">
+          <svg width="14" height="14" fill="none" stroke="#10B981" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          </svg>
+          截屏幕
+        </button>
+        <button id="btnTurnScreenOffNow" type="button" class="neu-btn" style="padding: 8px 4px; color: #2B3A4E;" title="立即切换手机物理屏幕亮灭">
+          <svg width="14" height="14" fill="none" stroke="#8B5CF6" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          熄屏幕
+        </button>
+      </div>
+
+      <!-- Real Android Physical Navigation Key Bar -->
+      <div class="grid-6">
+        <button type="button" data-keyevent="26" class="hw-key-btn neu-btn" style="padding: 9px 0; color: #F43F5E;" title="电源键 (KEYCODE_POWER)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9m6.364-5.364a9 9 0 11-12.728 0" />
+          </svg>
+        </button>
+        <button type="button" data-keyevent="25" class="hw-key-btn neu-btn" style="padding: 9px 0;" title="音量减 (KEYCODE_VOLUME_DOWN)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
+        <button type="button" data-keyevent="24" class="hw-key-btn neu-btn" style="padding: 9px 0;" title="音量加 (KEYCODE_VOLUME_UP)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
+        <button type="button" data-keyevent="4" class="hw-key-btn neu-btn" style="padding: 9px 0;" title="返回键 (KEYCODE_BACK)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button type="button" data-keyevent="3" class="hw-key-btn neu-btn" style="padding: 9px 0;" title="主页键 (KEYCODE_HOME)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </button>
+        <button type="button" data-keyevent="187" class="hw-key-btn neu-btn" style="padding: 9px 0;" title="多任务键 (KEYCODE_APP_SWITCH)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 2: 参数 (Display, Codec & Control Flags) ==================== -->
+    <div id="viewPanel-params" class="view-panel hidden">
+      <div class="neu-card">
+        <div class="section-title">显示与视频编码设置</div>
+        <div class="row-item">
+          <span class="row-label">视频编码格式</span>
+          <select id="optVideoCodec" aria-label="视频编码格式" class="neu-input">
+            <option value="h264" selected>标准超清 H.264 (兼容最佳)</option>
+            <option value="h265">高效超清 H.265 (高画质)</option>
+            <option value="av1">新一代超清 AV1</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">画面旋转锁定</span>
+          <select id="optOrientation" aria-label="画面旋转锁定" class="neu-input">
+            <option value="0" selected>跟随手机默认方向</option>
+            <option value="90">逆时针旋转 90° (横屏)</option>
+            <option value="180">倒置旋转 180°</option>
+            <option value="270">顺时针旋转 90° (横屏)</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">投屏窗口始终置顶</span>
+          <input type="checkbox" id="chkAlwaysOnTop" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">无边框沉浸窗口模式</span>
+          <input type="checkbox" id="chkBorderless" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">启动后直接全屏显示</span>
+          <input type="checkbox" id="chkFullscreen" class="cursor-pointer">
+        </div>
+      </div>
+
+      <div class="neu-card">
+        <div class="section-title">设备控制与电源管理</div>
+        <div class="row-item">
+          <span class="row-label">投屏时自动熄灭手机屏幕</span>
+          <input type="checkbox" id="chkTurnScreenOff" checked class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">连接期间保持手机常亮不锁屏</span>
+          <input type="checkbox" id="chkStayAwake" checked class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">在画面上显示手指物理触摸点</span>
+          <input type="checkbox" id="chkShowTouches" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">关闭投屏窗口时自动锁定手机</span>
+          <input type="checkbox" id="chkPowerOffClose" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">只读观察模式 (禁用键鼠控制)</span>
+          <input type="checkbox" id="chkNoControl" class="cursor-pointer">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 3: 无线 (Wireless ADB Pairing, Connect & Audio) ==================== -->
+    <div id="viewPanel-wireless" class="view-panel hidden">
+      <div class="neu-card">
+        <div class="flex items-center justify-between" style="margin-bottom: 10px;">
+          <span class="section-title" style="margin-bottom: 0;">无线调试配对与直连</span>
+          <button id="btnEnableTcpip5555" type="button" class="neu-btn" style="padding: 5px 10px; font-size: 11px; color: #3B82F6;">开启有线转无线 (5555)</button>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <div class="row-label" style="font-size: 11px; margin-bottom: 5px;">手机 IP 地址与连接端口</div>
+          <div class="flex">
+            <input id="inputWirelessIp" type="text" value="192.168.1.88:5555" class="neu-input flex-1" style="margin-right: 8px;" placeholder="例如 192.168.1.88:5555">
+            <button id="btnExecuteConnect" type="button" class="neu-btn" style="color: #F27A24;">无线连接</button>
+          </div>
+        </div>
+        <div class="flex items-end justify-between">
+          <div style="width: 38%;">
+            <div class="row-label" style="font-size: 11px; margin-bottom: 4px;">配对端口</div>
+            <input id="inputPairPort" type="text" value="39421" class="neu-input w-full" placeholder="39421">
+          </div>
+          <div style="width: 38%;">
+            <div class="row-label" style="font-size: 11px; margin-bottom: 4px;">6 位配对码</div>
+            <input id="inputPairCode" type="text" value="849201" class="neu-input w-full" placeholder="849201">
+          </div>
+          <button id="btnExecutePair" type="button" class="neu-btn" style="width: 19%; color: #3B82F6;">配对</button>
+        </div>
+      </div>
+
+      <div class="neu-card">
+        <div class="section-title">手机声音同步转发 (安卓 11+)</div>
+        <div class="row-item">
+          <span class="row-label">启用声音同步到电脑</span>
+          <input type="checkbox" id="chkAudioForward" checked class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">音频编码格式</span>
+          <select id="optAudioCodec" aria-label="音频编码格式" class="neu-input">
+            <option value="opus" selected>Opus 超低延迟 (推荐)</option>
+            <option value="aac">AAC 通用兼容格式</option>
+            <option value="flac">FLAC 无损高音质</option>
+            <option value="raw">RAW 原生未压缩</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">声音采集来源</span>
+          <select id="optAudioSource" aria-label="声音采集来源" class="neu-input">
+            <option value="output" selected>系统内部声音 (内录输出)</option>
+            <option value="mic">手机麦克风声音 (环境音)</option>
+            <option value="playback">应用媒体声音双录</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">启动时自动切换无线连接 (--tcpip)</span>
+          <input type="checkbox" id="chkTcpipAuto" class="cursor-pointer">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 4: 录制 (Recording, Camera Mirroring, UHID/OTG) ==================== -->
+    <div id="viewPanel-record" class="view-panel hidden">
+      <div class="neu-card">
+        <div class="section-title">同步音视频录屏与摄像头直连</div>
+        <div class="row-item">
+          <span class="row-label">启动投屏时同步录制视频</span>
+          <input type="checkbox" id="chkRecordEnable" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">录屏保存格式</span>
+          <select id="optRecordFormat" aria-label="录屏保存格式" class="neu-input">
+            <option value="mp4" selected>MP4 标准视频文件</option>
+            <option value="mkv">MKV 高清视频文件</option>
+            <option value="opus">Opus 纯音频录音</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">画面采集源</span>
+          <select id="optVideoSource" aria-label="画面采集源" class="neu-input">
+            <option value="display" selected>手机主屏幕画面</option>
+            <option value="camera">手机摄像头直连 (安卓 12+)</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">摄像头朝向与尺寸</span>
+          <div class="flex">
+            <select id="optCameraFacing" aria-label="摄像头朝向" class="neu-input" style="margin-right: 6px;">
+              <option value="back" selected>后置主摄</option>
+              <option value="front">前置镜头</option>
+            </select>
+            <select id="optCameraSize" aria-label="摄像头尺寸" class="neu-input">
+              <option value="1920x1080" selected>1080P</option>
+              <option value="3840x2160">4K</option>
+              <option value="1280x720">720P</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card">
+        <div class="section-title">物理外设模拟 (UHID / OTG / 虚拟屏)</div>
+        <div class="row-item">
+          <span class="row-label">电脑键盘输入模式</span>
+          <select id="optKeyboardMode" aria-label="电脑键盘输入模式" class="neu-input">
+            <option value="sdk" selected>标准系统注入 (SDK)</option>
+            <option value="uhid">物理键盘模拟 (支持中文输入)</option>
+            <option value="aoa">USB 硬件底层直通 (AOA)</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">电脑鼠标控制模式</span>
+          <select id="optMouseMode" aria-label="电脑鼠标控制模式" class="neu-input">
+            <option value="sdk" selected>标准屏幕坐标映射</option>
+            <option value="uhid">物理鼠标模拟 (原生光标)</option>
+            <option value="aoa">USB 硬件外设直通</option>
+          </select>
+        </div>
+        <div class="row-item">
+          <span class="row-label">纯键鼠控制模式 (--otg 不投屏)</span>
+          <input type="checkbox" id="chkOtgMode" class="cursor-pointer">
+        </div>
+        <div class="row-item">
+          <span class="row-label">创建独立虚拟扩展屏幕 (--new-display)</span>
+          <input type="checkbox" id="chkNewDisplay" class="cursor-pointer">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 5: 监控 (Reference Right Card Telemetry + Native Canvas Chart + Real CLI Log) ==================== -->
+    <div id="viewPanel-monitor" class="view-panel hidden">
+      <!-- 3 Mini Metric Cards matching Reference Right Screen -->
+      <div class="grid-3" style="margin-bottom: 12px;">
+        <div class="neu-card" style="margin-bottom: 0; padding: 11px;">
+          <div style="font-size: 11px; font-weight: 700; color: #7E8FA6;">传输延迟</div>
+          <div style="font-size: 16px; font-weight: 800; color: #2B3A4E; margin-top: 3px;"><span id="metricLatency">15.2</span><span style="font-size: 10px; color: #7E8FA6; margin-left: 2px;">毫秒</span></div>
+          <div style="font-size: 10px; color: #10B981; font-weight: 600; margin-top: 2px;">实时在线</div>
+        </div>
+        <div class="neu-card" style="margin-bottom: 0; padding: 11px;">
+          <div style="font-size: 11px; font-weight: 700; color: #7E8FA6;">电池电量</div>
+          <div style="font-size: 16px; font-weight: 800; color: #2B3A4E; margin-top: 3px;"><span id="metricBattery">100</span><span style="font-size: 10px; color: #7E8FA6; margin-left: 2px;">%</span></div>
+          <div id="metricBatteryStatus" style="font-size: 10px; color: #F27A24; font-weight: 600; margin-top: 2px;">USB 供电</div>
+        </div>
+        <div class="neu-card" style="margin-bottom: 0; padding: 11px;">
+          <div style="font-size: 11px; font-weight: 700; color: #7E8FA6;">目标码率</div>
+          <div style="font-size: 16px; font-weight: 800; color: #2B3A4E; margin-top: 3px;"><span id="metricStreamRate">20</span><span style="font-size: 10px; color: #7E8FA6; margin-left: 2px;">兆/秒</span></div>
+          <div style="font-size: 10px; color: #3B82F6; font-weight: 600; margin-top: 2px;">硬件加速</div>
+        </div>
+      </div>
+
+      <!-- Native Canvas Orange Spline Chart (Zero CDN dependency!) -->
+      <div class="neu-card" style="padding: 12px;">
+        <div class="flex items-center justify-between" style="margin-bottom: 6px;">
+          <div>
+            <span style="font-size: 12px; font-weight: 800; color: #2B3A4E;">帧率与延迟</span>
+            <span style="font-size: 12px; font-weight: 600; color: #7E8FA6; margin-left: 4px;">趋势监控</span>
+          </div>
+          <span id="chartPeakBadge" class="neu-inset" style="padding: 2px 8px; font-size: 10px; font-weight: 800; color: #F27A24;">15.2 毫秒</span>
+        </div>
+        <canvas id="telemetryChart" width="356" height="100" style="width: 100%; height: 100px; display: block;"></canvas>
+      </div>
+
+      <!-- Real Command & Process Output Console -->
+      <div class="neu-card" style="padding: 12px; margin-bottom: 0;">
+        <div class="flex items-center justify-between" style="margin-bottom: 6px;">
+          <span style="font-size: 11px; font-weight: 800; color: #2B3A4E;">真实执行指令与日志</span>
+          <div>
+            <button id="btnCopyCliTop" type="button" class="neu-btn" style="padding: 4px 8px; font-size: 10px; color: #3B82F6; margin-right: 4px;">复制指令</button>
+            <button id="btnClearLog" type="button" class="neu-btn" style="padding: 4px 8px; font-size: 10px;">清空</button>
+          </div>
+        </div>
+        <div id="generatedCliCode" class="neu-inset break-all select-all" style="padding: 8px; font-family: Consolas, monospace; font-size: 10px; color: #2B3A4E; margin-bottom: 8px;">
+          scrcpy --max-size=1920 --video-bit-rate=20M --max-fps=60 --video-codec=h264 --audio-codec=opus --turn-screen-off --stay-awake
+        </div>
+        <div id="consoleLogBox" class="neu-inset select-text" style="padding: 8px; height: 86px; overflow-y: auto; font-family: Consolas, monospace; font-size: 10px; color: #7E8FA6;">
+          <div>[系统就绪] 单窗口原生引擎已启动。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Master Bar: Device Temperature + Real Process Launch Switch (1:1 Reference Bottom Row) -->
+    <div class="flex items-center justify-between" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.65);">
+      <div>
+        <div style="font-size: 11px; font-weight: 600; color: #7E8FA6;">当前设备温度 · <span id="processStateText" style="color: #3B82F6; font-weight: 700;">待机中</span></div>
+        <div style="font-size: 18px; font-weight: 800; color: #2B3A4E; margin-top: 2px;"><span id="leftTempDisplay">34.5</span><span style="font-size: 12px; color: #7E8FA6; margin-left: 2px;">°C</span></div>
+      </div>
+
+      <div class="flex items-center">
+        <button id="btnRunScrcpyPrimary" type="button" class="neu-btn" style="padding: 10px 14px; color: #F27A24; margin-right: 12px;">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 4px;"><path d="M8 5v14l11-7z"/></svg>
+          <span id="btnRunScrcpyLabel">启动投屏</span>
+        </button>
+        <div class="flex flex-col items-end">
+          <span style="font-size: 10px; font-weight: 600; color: #7E8FA6; margin-bottom: 4px;">投屏开关</span>
+          <div id="masterMirrorSwitch" role="switch" aria-checked="false" tabindex="0" class="neu-switch" title="启动或停止真实 Scrcpy 投屏进程">
+            <div class="neu-switch-thumb"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Path & One-Click Official Scrcpy Auto-Installer Modal (Inside the Single Window) -->
+    <div id="pathConfigModal" class="hidden absolute inset-0 flex flex-col justify-between" style="z-index: 40; background: #EBF1F8; padding: 22px; border-radius: 34px;">
+      <div>
+        <div class="flex items-center justify-between" style="margin-bottom: 10px;">
+          <span style="font-size: 15px; font-weight: 800; color: #2B3A4E;">Scrcpy / ADB 核心组件配置</span>
+          <button id="btnClosePathModal" type="button" class="neu-btn" style="width: 32px; height: 32px; padding: 0;">✕</button>
+        </div>
+
+        <div id="engineMissingNotice" class="neu-inset" style="padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: #2B3A4E; line-height: 1.55;">
+          <div style="font-weight: 800; color: #F27A24; margin-bottom: 4px;">状态提示：为什么插上手机还显示“未检测到设备”或“找不到 scrcpy.exe”？</div>
+          <div>因为当前目录下还没有 <b>scrcpy.exe</b> 和 <b>adb.exe</b> 核心文件。您可以点击下方<b>「一键自动下载安装官方核心包」</b>，或点击「浏览」选择您电脑上已有的 scrcpy.exe！</div>
+        </div>
+
+        <!-- One-Click Official Scrcpy Auto-Download Card -->
+        <div class="neu-card" style="padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 800; color: #2B3A4E; margin-bottom: 4px;">方式一：全自动下载安装（推荐，无需手动找文件夹）</div>
+          <div style="font-size: 11px; color: #7E8FA6; margin-bottom: 8px;">自动从 GitHub 官方源下载并解压 <code>scrcpy-win64-v3.1</code>（含完整 scrcpy.exe 与 adb.exe）：</div>
+          <button id="btnAutoDownloadScrcpy" type="button" class="neu-btn w-full" style="padding: 10px; color: #10B981; font-size: 12px;">
+            ⬇ 一键自动下载并配置官方 Scrcpy 核心包
+          </button>
+        </div>
+
+        <!-- Manual Path Selection Card -->
+        <div class="neu-card" style="padding: 12px; margin-bottom: 0;">
+          <div style="font-size: 12px; font-weight: 800; color: #2B3A4E; margin-bottom: 8px;">方式二：指定电脑上已有的 scrcpy 文件夹</div>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #7E8FA6; margin-bottom: 4px;">scrcpy.exe 路径</label>
+            <div class="flex">
+              <input id="inputScrcpyPath" type="text" value="scrcpy.exe" class="neu-input flex-1" style="margin-right: 6px;" placeholder="例如 D:\scrcpy-win64\scrcpy.exe">
+              <button id="btnBrowseScrcpy" type="button" class="neu-btn" style="padding: 6px 10px; color: #3B82F6;">浏览...</button>
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #7E8FA6; margin-bottom: 4px;">adb.exe 路径</label>
+            <div class="flex">
+              <input id="inputAdbPath" type="text" value="adb.exe" class="neu-input flex-1" style="margin-right: 6px;" placeholder="例如 D:\scrcpy-win64\adb.exe">
+              <button id="btnBrowseAdb" type="button" class="neu-btn" style="padding: 6px 10px; color: #3B82F6;">浏览...</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button id="btnSavePaths" type="button" class="neu-btn" style="padding: 10px 18px; color: #F27A24;">保存配置并立即检测手机</button>
+      </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input id="hiddenApkInput" type="file" accept=".apk" class="hidden">
+    <input id="hiddenFileInput" type="file" class="hidden">
+    <input id="hiddenBrowseScrcpyInput" type="file" accept=".exe" class="hidden">
+    <input id="hiddenBrowseAdbInput" type="file" accept=".exe" class="hidden">
+
+    <!-- Toast Banner -->
+    <div id="toastBanner" class="hidden neu-card flex items-center" style="position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 8px 16px; white-space: nowrap;">
+      <span class="status-dot" style="background: #F27A24;"></span>
+      <span id="toastMessage" style="font-size: 12px; font-weight: 800; color: #2B3A4E;">已执行</span>
+    </div>
+
+  </div>
+
+  <script>
+    var state = {
+      scrcpyPath: 'scrcpy.exe',
+      adbPath: 'adb.exe',
+      binariesFound: false,
+      devices: [],
+      selectedSerial: '',
+      mirrorRunning: false,
+      fpsSteps: [30, 60, 90, 120, 144],
+      fpsIndex: 1,
+      bitrate: 20,
+      bitrateList: [4, 8, 16, 20, 32, 64]
+    };
+
+    try {
+      if (window.localStorage) {
+        var savedScrcpy = window.localStorage.getItem('neu_scrcpy_path');
+        var savedAdb = window.localStorage.getItem('neu_adb_path');
+        if (savedScrcpy) state.scrcpyPath = savedScrcpy;
+        if (savedAdb) state.adbPath = savedAdb;
+      }
+    } catch (e) {}
+
+    var NativeShell = {
+      hasActiveX: function() {
+        return typeof window.ActiveXObject !== 'undefined' || 'ActiveXObject' in window;
+      },
+      hasPyWebView: function() {
+        return Boolean(window.pywebview && window.pywebview.api);
+      },
+      fileExists: function(p) {
+        if (!this.hasActiveX()) return true;
+        try {
+          var fso = new window.ActiveXObject('Scripting.FileSystemObject');
+          return fso.FileExists(p);
+        } catch (e) {
+          return false;
+        }
+      },
+      execSync: function(cmdStr) {
+        if (this.hasActiveX()) {
+          try {
+            var shell = new window.ActiveXObject('WScript.Shell');
+            var fso = new window.ActiveXObject('Scripting.FileSystemObject');
+            var tempFolder = fso.GetSpecialFolder(2);
+            var tmpOut = tempFolder.Path + '\\neu_adb_out.txt';
+            var fullCmd = 'cmd.exe /c chcp 65001 >nul && ' + cmdStr + ' > "' + tmpOut + '" 2>&1';
+            var code = shell.Run(fullCmd, 0, true);
+            var out = '';
+            if (fso.FileExists(tmpOut)) {
+              var ts = fso.OpenTextFile(tmpOut, 1, false, 0);
+              if (!ts.AtEndOfStream) {
+                out = ts.ReadAll();
+              }
+              ts.Close();
+              try { fso.DeleteFile(tmpOut); } catch (e2) {}
+            }
+            return { ok: code === 0, code: code, output: out ? out.replace(/^\s+|\s+$/g, '') : '' };
+          } catch (err) {
+            return { ok: false, code: -1, output: String(err.message || err) };
+          }
+        }
+        return { ok: false, code: -1, output: '浏览器预览模式' };
+      },
+      spawnScrcpy: function(cmdStr) {
+        if (this.hasPyWebView()) {
+          window.pywebview.api.run_scrcpy(cmdStr);
+          return { ok: true };
+        }
+        if (this.hasActiveX()) {
+          try {
+            var shell = new window.ActiveXObject('WScript.Shell');
+            // Execute scrcpy directly without `start ""` so it doesn't pop up a cryptic Windows dialog if missing
+            shell.Run('cmd.exe /c ' + cmdStr, 0, false);
+            return { ok: true };
+          } catch (err) {
+            return { ok: false, error: String(err.message || err) };
+          }
+        }
+        return { ok: false, error: '浏览器预览模式' };
+      },
+      killScrcpy: function() {
+        if (this.hasActiveX()) {
+          try {
+            var shell = new window.ActiveXObject('WScript.Shell');
+            shell.Run('cmd.exe /c taskkill /F /IM scrcpy.exe', 0, true);
+            return true;
+          } catch (e) {}
+        }
+        return false;
+      }
+    };
+
+    // Deep search common directories & PATH for scrcpy.exe and adb.exe
+    function autoDiscoverBinaries() {
+      if (!NativeShell.hasActiveX()) {
+        state.binariesFound = true;
+        return true;
+      }
+      try {
+        var fso = new window.ActiveXObject('Scripting.FileSystemObject');
+        var shell = new window.ActiveXObject('WScript.Shell');
+        var cwd = shell.CurrentDirectory;
+        var userProfile = shell.ExpandEnvironmentStrings('%USERPROFILE%');
+        var localAppData = shell.ExpandEnvironmentStrings('%LOCALAPPDATA%');
+
+        // 1. If already set to an existing absolute path, verify it
+        if (fso.FileExists(state.scrcpyPath) && fso.FileExists(state.adbPath)) {
+          state.binariesFound = true;
+          return true;
+        }
+
+        // 2. Check candidate folders
+        var candidates = [
+          cwd,
+          cwd + '\\scrcpy',
+          cwd + '\\scrcpy-win64',
+          cwd + '\\scrcpy-win64-v3.1',
+          localAppData + '\\ScrcpyNeumorphic\\scrcpy-win64-v3.1',
+          localAppData + '\\ScrcpyNeumorphic',
+          userProfile + '\\Desktop\\scrcpy',
+          userProfile + '\\Desktop\\scrcpy-win64',
+          userProfile + '\\Downloads\\scrcpy-win64-v3.1',
+          userProfile + '\\Downloads\\scrcpy-win64',
+          'C:\\scrcpy',
+          'D:\\scrcpy',
+          'D:\\scrcpy-win64'
+        ];
+
+        for (var i = 0; i < candidates.length; i++) {
+          var dir = candidates[i];
+          if (fso.FileExists(dir + '\\scrcpy.exe')) {
+            state.scrcpyPath = dir + '\\scrcpy.exe';
+            if (fso.FileExists(dir + '\\adb.exe')) {
+              state.adbPath = dir + '\\adb.exe';
+            }
+            state.binariesFound = true;
+            try {
+              window.localStorage.setItem('neu_scrcpy_path', state.scrcpyPath);
+              window.localStorage.setItem('neu_adb_path', state.adbPath);
+            } catch (e) {}
+            return true;
+          }
+        }
+
+        // 3. Check system PATH via `where scrcpy.exe`
+        var whereRes = NativeShell.execSync('where scrcpy.exe');
+        if (whereRes.ok && whereRes.output && whereRes.output.indexOf('.exe') !== -1) {
+          var firstLine = whereRes.output.split(/\r?\n/)[0].replace(/^\s+|\s+$/g, '');
+          if (fso.FileExists(firstLine)) {
+            state.scrcpyPath = firstLine;
+            var parentDir = fso.GetParentFolderName(firstLine);
+            if (fso.FileExists(parentDir + '\\adb.exe')) {
+              state.adbPath = parentDir + '\\adb.exe';
+            }
+            state.binariesFound = true;
+            return true;
+          }
+        }
+      } catch (e) {}
+
+      state.binariesFound = false;
+      return false;
+    }
+
+    // One-Click Official Scrcpy v3.1 Auto-Downloader via PowerShell
+    function autoDownloadOfficialScrcpy() {
+      if (!NativeShell.hasActiveX()) {
+        showToast('请在 Windows 上运行 EXE 使用自动下载功能');
+        return;
+      }
+      var btn = document.getElementById('btnAutoDownloadScrcpy');
+      btn.textContent = '正在下载并解压官方核心包，请稍候 (约 15~30 秒)...';
+      showToast('正在后台下载官方 scrcpy-win64-v3.1...');
+
+      setTimeout(function() {
+        try {
+          var shell = new window.ActiveXObject('WScript.Shell');
+          var fso = new window.ActiveXObject('Scripting.FileSystemObject');
+          var targetRoot = shell.ExpandEnvironmentStrings('%LOCALAPPDATA%') + '\\ScrcpyNeumorphic';
+          if (!fso.FolderExists(targetRoot)) {
+            fso.CreateFolder(targetRoot);
+          }
+          var zipPath = targetRoot + '\\scrcpy-win64-v3.1.zip';
+          var url = 'https://github.com/Genymobile/scrcpy/releases/download/v3.1/scrcpy-win64-v3.1.zip';
+
+          var psCmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "' +
+            '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ' +
+            'Invoke-WebRequest -Uri \'' + url + '\' -OutFile \'' + zipPath + '\'; ' +
+            'Expand-Archive -Path \'' + zipPath + '\' -DestinationPath \'' + targetRoot + '\' -Force"';
+
+          shell.Run(psCmd, 1, true);
+
+          var extractedDir = targetRoot + '\\scrcpy-win64-v3.1';
+          if (fso.FileExists(extractedDir + '\\scrcpy.exe')) {
+            state.scrcpyPath = extractedDir + '\\scrcpy.exe';
+            state.adbPath = extractedDir + '\\adb.exe';
+            state.binariesFound = true;
+            document.getElementById('inputScrcpyPath').value = state.scrcpyPath;
+            document.getElementById('inputAdbPath').value = state.adbPath;
+            try {
+              window.localStorage.setItem('neu_scrcpy_path', state.scrcpyPath);
+              window.localStorage.setItem('neu_adb_path', state.adbPath);
+            } catch (e) {}
+            btn.textContent = '✓ 已成功安装官方核心包！';
+            document.getElementById('pathConfigModal').classList.add('hidden');
+            showToast('官方 Scrcpy 核心包安装完成！');
+            scanAdbDevices();
+          } else {
+            btn.textContent = '⬇ 下载失败（可能网络受限），请手动浏览指定路径';
+            showToast('GitHub 下载超时，请手动把 EXE 放入您的 scrcpy 文件夹');
+          }
+        } catch (err) {
+          btn.textContent = '⬇ 一键自动下载并配置官方 Scrcpy 核心包';
+          showToast('下载出错，请使用下方手动浏览指定路径');
+        }
+      }, 80);
+    }
+
+    var toastTimer = null;
+    function showToast(msg) {
+      var banner = document.getElementById('toastBanner');
+      document.getElementById('toastMessage').textContent = msg;
+      banner.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() {
+        banner.classList.add('hidden');
+      }, 2800);
+    }
+
+    function appendLog(line) {
+      var box = document.getElementById('consoleLogBox');
+      var now = new Date();
+      var hh = ('0' + now.getHours()).slice(-2);
+      var mm = ('0' + now.getMinutes()).slice(-2);
+      var ss = ('0' + now.getSeconds()).slice(-2);
+      var div = document.createElement('div');
+      div.textContent = '[' + hh + ':' + mm + ':' + ss + '] ' + line;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function quoteExe(p) {
+      var trimmed = (p || '').replace(/^\s+|\s+$/g, '');
+      if (trimmed.indexOf(' ') !== -1 && trimmed.charAt(0) !== '"') {
+        return '"' + trimmed + '"';
+      }
+      return trimmed;
+    }
+
+    function buildScrcpyCommand() {
+      var args = [quoteExe(state.scrcpyPath)];
+      if (state.selectedSerial && state.selectedSerial !== 'usb_default' && state.selectedSerial !== 'tcpip_default') {
+        args.push('-s ' + state.selectedSerial);
+      } else if (state.selectedSerial === 'usb_default') {
+        args.push('-d');
+      } else if (state.selectedSerial === 'tcpip_default') {
+        args.push('-e');
+      }
+
+      var maxSize = document.getElementById('selectMaxSize').value;
+      if (maxSize !== '0') args.push('--max-size=' + maxSize);
+
+      args.push('--video-bit-rate=' + state.bitrate + 'M');
+
+      var fps = state.fpsSteps[state.fpsIndex];
+      args.push('--max-fps=' + fps);
+
+      var vCodec = document.getElementById('optVideoCodec').value;
+      args.push('--video-codec=' + vCodec);
+      var codecNames = { h264: '标准超清 H.264', h265: '高效超清 H.265', av1: '新一代超清 AV1' };
+      document.getElementById('dialCodecBadge').textContent = codecNames[vCodec] || '标准超清 H.264';
+
+      var orient = document.getElementById('optOrientation').value;
+      if (orient !== '0') args.push('--orientation=' + orient);
+
+      var vSource = document.getElementById('optVideoSource').value;
+      if (vSource === 'camera') {
+        args.push('--video-source=camera');
+        args.push('--camera-facing=' + document.getElementById('optCameraFacing').value);
+        args.push('--camera-size=' + document.getElementById('optCameraSize').value);
+      }
+
+      if (!document.getElementById('chkAudioForward').checked) {
+        args.push('--no-audio');
+      } else {
+        var aCodec = document.getElementById('optAudioCodec').value;
+        var aSource = document.getElementById('optAudioSource').value;
+        args.push('--audio-codec=' + aCodec);
+        if (aSource !== 'output') args.push('--audio-source=' + aSource);
+      }
+
+      if (document.getElementById('chkAlwaysOnTop').checked) args.push('--always-on-top');
+      if (document.getElementById('chkBorderless').checked) args.push('--window-borderless');
+      if (document.getElementById('chkFullscreen').checked) args.push('--fullscreen');
+      if (document.getElementById('chkTurnScreenOff').checked) args.push('--turn-screen-off');
+      if (document.getElementById('chkStayAwake').checked) args.push('--stay-awake');
+      if (document.getElementById('chkShowTouches').checked) args.push('--show-touches');
+      if (document.getElementById('chkPowerOffClose').checked) args.push('--power-off-on-close');
+      if (document.getElementById('chkNoControl').checked) args.push('--no-control');
+      if (document.getElementById('chkTcpipAuto').checked) args.push('--tcpip');
+
+      if (document.getElementById('chkRecordEnable').checked) {
+        var fmt = document.getElementById('optRecordFormat').value;
+        args.push('--record=scrcpy_record_' + new Date().getTime() + '.' + fmt);
+      }
+
+      var kbMode = document.getElementById('optKeyboardMode').value;
+      if (kbMode !== 'sdk') args.push('--keyboard=' + kbMode);
+
+      var mouseMode = document.getElementById('optMouseMode').value;
+      if (mouseMode !== 'sdk') args.push('--mouse=' + mouseMode);
+
+      if (document.getElementById('chkOtgMode').checked) args.push('--otg');
+      if (document.getElementById('chkNewDisplay').checked) args.push('--new-display=1920x1080/240');
+
+      var cmd = args.join(' ');
+      document.getElementById('generatedCliCode').textContent = cmd;
+      return cmd;
+    }
+
+    function scanAdbDevices() {
+      var sel = document.getElementById('deviceSelector');
+      var dot = document.getElementById('adbStatusDot');
+
+      autoDiscoverBinaries();
+      document.getElementById('inputScrcpyPath').value = state.scrcpyPath;
+      document.getElementById('inputAdbPath').value = state.adbPath;
+
+      if (NativeShell.hasActiveX() && !state.binariesFound) {
+        sel.innerHTML = '<option value="">未找到 adb/scrcpy (点击右侧齿轮配置)</option>';
+        dot.className = 'status-dot err';
+        document.getElementById('currentDeviceName').textContent = '需配置核心路径';
+        document.getElementById('deviceAndroidVer').textContent = '点击右上角齿轮';
+        appendLog('[提示] 未在当前目录检测到 scrcpy.exe 与 adb.exe，已打开配置面板。');
+        document.getElementById('pathConfigModal').classList.remove('hidden');
+        buildScrcpyCommand();
+        return;
+      }
+
+      var adbCmd = quoteExe(state.adbPath) + ' devices -l';
+      appendLog('执行设备扫描: ' + adbCmd);
+
+      var res = NativeShell.execSync(adbCmd);
+      if (NativeShell.hasActiveX()) {
+        var lines = (res.output || '').split(/\r?\n/);
+        var parsed = [];
+        var unauthorizedCount = 0;
+        for (var i = 0; i < lines.length; i++) {
+          var trimmed = lines[i].replace(/^\s+|\s+$/g, '');
+          if (!trimmed || trimmed.indexOf('List of devices') !== -1 || trimmed.indexOf('* daemon') !== -1) continue;
+          var parts = trimmed.split(/\s+/);
+          if (parts.length >= 2) {
+            var serial = parts[0];
+            var status = parts[1];
+            if (status === 'device') {
+              var modelMatch = trimmed.match(/model:(\S+)/);
+              var model = modelMatch ? modelMatch[1].replace(/_/g, ' ') : '安卓手机';
+              parsed.push({ serial: serial, model: model });
+            } else if (status === 'unauthorized') {
+              unauthorizedCount++;
+            }
+          }
+        }
+        state.devices = parsed;
+        sel.innerHTML = '';
+        if (parsed.length > 0) {
+          for (var j = 0; j < parsed.length; j++) {
+            var d = parsed[j];
+            var opt = document.createElement('option');
+            opt.value = d.serial;
+            opt.textContent = d.model + ' (' + d.serial + ')';
+            sel.appendChild(opt);
+            if (j === 0) state.selectedSerial = d.serial;
+          }
+          dot.className = 'status-dot';
+          document.getElementById('currentDeviceName').textContent = parsed[0].model;
+          document.getElementById('deviceAndroidVer').textContent = '已连接 · ' + parsed[0].serial;
+          refreshDeviceTelemetry();
+          showToast('已连接: ' + parsed[0].model);
+        } else if (unauthorizedCount > 0) {
+          sel.innerHTML = '<option value="">手机未点击允许调试 (请在手机弹窗点允许)</option>';
+          state.selectedSerial = '';
+          dot.className = 'status-dot warn';
+          document.getElementById('currentDeviceName').textContent = '请在手机端授权';
+          document.getElementById('deviceAndroidVer').textContent = '等待点击允许 USB 调试';
+          showToast('请在手机屏幕上勾选“始终允许”并点击确定！');
+        } else {
+          sel.innerHTML = '<option value="">未检测到手机 (请开启开发者选项 USB 调试)</option><option value="usb_default">强制有线模式 (-d)</option>';
+          state.selectedSerial = '';
+          dot.className = 'status-dot warn';
+          document.getElementById('currentDeviceName').textContent = '等待手机连接';
+          document.getElementById('deviceAndroidVer').textContent = '请开启 USB 调试';
+          showToast('未检测到开启 USB 调试的手机（仅充电模式无法投屏）');
+        }
+      } else {
+        sel.innerHTML = '<option value="">自动匹配当前唯一设备 (默认)</option><option value="usb_default">有线连接模式 (-d)</option><option value="tcpip_default">无线连接模式 (-e)</option>';
+        state.selectedSerial = '';
+        document.getElementById('currentDeviceName').textContent = '默认安卓设备';
+        document.getElementById('deviceAndroidVer').textContent = '就绪 · 自动匹配';
+      }
+      buildScrcpyCommand();
+    }
+
+    function refreshDeviceTelemetry() {
+      if (!NativeShell.hasActiveX()) return;
+      var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+      var res = NativeShell.execSync(quoteExe(state.adbPath) + ' ' + serialArg + ' shell dumpsys battery');
+      if (res.ok && res.output) {
+        var levelMatch = res.output.match(/level:\s*(\d+)/);
+        var tempMatch = res.output.match(/temperature:\s*(\d+)/);
+        if (levelMatch) {
+          document.getElementById('metricBattery').textContent = levelMatch[1];
+        }
+        if (tempMatch) {
+          var tempC = (parseInt(tempMatch[1], 10) / 10).toFixed(1);
+          document.getElementById('leftTempDisplay').textContent = tempC;
+        }
+      }
+    }
+
+    function updateDialUI() {
+      var fps = state.fpsSteps[state.fpsIndex];
+      document.getElementById('dialMainValue').textContent = fps;
+      var circle = document.getElementById('dialProgressCircle');
+      var circumference = 528;
+      var ratio = fps / 144;
+      circle.setAttribute('stroke-dashoffset', String(Math.round(circumference * (1 - ratio * 0.85))));
+
+      var subLabel = document.getElementById('dialSubLabel');
+      if (fps >= 120) {
+        circle.setAttribute('stroke', '#F27A24');
+        subLabel.textContent = '极致丝滑';
+      } else if (fps >= 60) {
+        circle.setAttribute('stroke', '#3B82F6');
+        subLabel.textContent = '超低延迟';
+      } else {
+        circle.setAttribute('stroke', '#10B981');
+        subLabel.textContent = '省电流畅';
+      }
+      buildScrcpyCommand();
+    }
+
+    function updateBitrateUI(newBitrate) {
+      state.bitrate = newBitrate;
+      document.getElementById('cardBitrateLabel').textContent = state.bitrate + ' 兆比特/秒';
+      document.getElementById('metricStreamRate').textContent = state.bitrate;
+      document.getElementById('selectBitratePreset').value = String(state.bitrate);
+      buildScrcpyCommand();
+    }
+
+    function toggleScrcpyProcess(forceStart) {
+      var masterSwitch = document.getElementById('masterMirrorSwitch');
+      var stateText = document.getElementById('processStateText');
+      var btnLabel = document.getElementById('btnRunScrcpyLabel');
+      var shouldStart = typeof forceStart === 'boolean' ? forceStart : !state.mirrorRunning;
+
+      if (shouldStart) {
+        if (NativeShell.hasActiveX() && !autoDiscoverBinaries()) {
+          document.getElementById('pathConfigModal').classList.remove('hidden');
+          showToast('请先点击“一键自动下载”或指定 scrcpy.exe 路径！');
+          return;
+        }
+        var cmd = buildScrcpyCommand();
+        appendLog('启动投屏进程: ' + cmd);
+        var res = NativeShell.spawnScrcpy(cmd);
+        state.mirrorRunning = true;
+        masterSwitch.classList.add('checked');
+        masterSwitch.setAttribute('aria-checked', 'true');
+        stateText.textContent = '投屏运行中';
+        stateText.style.color = '#10B981';
+        btnLabel.textContent = '重新启动';
+        showToast(res.ok ? '已拉起 Scrcpy 投屏窗口' : '已生成启动指令');
+      } else {
+        NativeShell.killScrcpy();
+        state.mirrorRunning = false;
+        masterSwitch.classList.remove('checked');
+        masterSwitch.setAttribute('aria-checked', 'false');
+        stateText.textContent = '已停止';
+        stateText.style.color = '#7E8FA6';
+        btnLabel.textContent = '启动投屏';
+        appendLog('已关闭 Scrcpy 投屏进程');
+        showToast('已停止 Scrcpy 投屏进程');
+      }
+    }
+
+    function drawNativeSplineChart() {
+      var canvas = document.getElementById('telemetryChart');
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext('2d');
+      var w = canvas.width;
+      var h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      var points = [
+        { x: 24, y: 68, label: '周日' },
+        { x: 76, y: 74, label: '周一' },
+        { x: 128, y: 58, label: '周二' },
+        { x: 180, y: 32, label: '周三' },
+        { x: 232, y: 62, label: '周四' },
+        { x: 284, y: 54, label: '周五' },
+        { x: 334, y: 66, label: '周六' }
+      ];
+
+      ctx.strokeStyle = 'rgba(126, 143, 166, 0.15)';
+      ctx.lineWidth = 1;
+      for (var g = 18; g <= 74; g += 28) {
+        ctx.beginPath();
+        ctx.moveTo(10, g);
+        ctx.lineTo(w - 10, g);
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (var i = 0; i < points.length - 1; i++) {
+        var xc = (points[i].x + points[i + 1].x) / 2;
+        var yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.strokeStyle = '#F27A24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      var peak = points[3];
+      ctx.beginPath();
+      ctx.arc(peak.x, peak.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#F27A24';
+      ctx.stroke();
+
+      ctx.font = '600 10px "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      for (var k = 0; k < points.length; k++) {
+        ctx.fillStyle = k === 3 ? '#F27A24' : '#7E8FA6';
+        ctx.fillText(points[k].label, points[k].x, h - 4);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        if (NativeShell.hasActiveX()) {
+          window.resizeTo(475, 835);
+        }
+      } catch (e) {}
+
+      drawNativeSplineChart();
+      updateDialUI();
+      scanAdbDevices();
+
+      // Navigation tabs
+      var navBtns = document.querySelectorAll('.nav-view-btn');
+      Array.prototype.forEach.call(navBtns, function(btn) {
+        btn.addEventListener('click', function() {
+          Array.prototype.forEach.call(navBtns, function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var v = btn.getAttribute('data-view');
+          var panels = document.querySelectorAll('.view-panel');
+          Array.prototype.forEach.call(panels, function(p) { p.classList.add('hidden'); });
+          document.getElementById('viewPanel-' + v).classList.remove('hidden');
+          if (v === 'monitor') drawNativeSplineChart();
+        });
+      });
+
+      document.getElementById('btnScanDevices').addEventListener('click', scanAdbDevices);
+
+      document.getElementById('deviceSelector').addEventListener('change', function(e) {
+        state.selectedSerial = e.target.value;
+        for (var i = 0; i < state.devices.length; i++) {
+          if (state.devices[i].serial === state.selectedSerial) {
+            document.getElementById('currentDeviceName').textContent = state.devices[i].model;
+            document.getElementById('deviceAndroidVer').textContent = '已连接 · ' + state.devices[i].serial;
+            refreshDeviceTelemetry();
+            break;
+          }
+        }
+        buildScrcpyCommand();
+      });
+
+      document.getElementById('btnCycleFps').addEventListener('click', function() {
+        state.fpsIndex = (state.fpsIndex + 1) % state.fpsSteps.length;
+        updateDialUI();
+        showToast('帧率已设为 ' + state.fpsSteps[state.fpsIndex] + ' 帧/秒');
+      });
+
+      document.getElementById('selectMaxSize').addEventListener('change', function(e) {
+        var map = { '0': '原始屏幕分辨率', '1280': '720P 高清 (最大 1280)', '1920': '1080P 超清 (最大 1920)', '2560': '2K 极清 (最大 2560)' };
+        document.getElementById('cardResLabel').textContent = map[e.target.value];
+        buildScrcpyCommand();
+      });
+
+      // Bitrate controls
+      document.getElementById('selectBitratePreset').addEventListener('change', function(e) {
+        updateBitrateUI(parseInt(e.target.value, 10));
+      });
+      document.getElementById('btnBitrateDown').addEventListener('click', function() {
+        var idx = state.bitrateList.indexOf(state.bitrate);
+        var nextIdx = idx > 0 ? idx - 1 : 0;
+        updateBitrateUI(state.bitrateList[nextIdx]);
+      });
+      document.getElementById('btnBitrateUp').addEventListener('click', function() {
+        var idx = state.bitrateList.indexOf(state.bitrate);
+        var nextIdx = (idx !== -1 && idx < state.bitrateList.length - 1) ? idx + 1 : state.bitrateList.length - 1;
+        updateBitrateUI(state.bitrateList[nextIdx]);
+      });
+
+      var paramIds = [
+        'optVideoCodec', 'optOrientation', 'chkAlwaysOnTop', 'chkBorderless', 'chkFullscreen',
+        'chkTurnScreenOff', 'chkStayAwake', 'chkShowTouches', 'chkPowerOffClose', 'chkNoControl',
+        'chkAudioForward', 'optAudioCodec', 'optAudioSource', 'chkTcpipAuto',
+        'chkRecordEnable', 'optRecordFormat', 'optVideoSource', 'optCameraFacing', 'optCameraSize',
+        'optKeyboardMode', 'optMouseMode', 'chkOtgMode', 'chkNewDisplay'
+      ];
+      for (var m = 0; m < paramIds.length; m++) {
+        var el = document.getElementById(paramIds[m]);
+        if (el) el.addEventListener('change', buildScrcpyCommand);
+      }
+
+      document.getElementById('masterMirrorSwitch').addEventListener('click', function() { toggleScrcpyProcess(); });
+      document.getElementById('btnRunScrcpyPrimary').addEventListener('click', function() { toggleScrcpyProcess(true); });
+
+      var hwBtns = document.querySelectorAll('.hw-key-btn');
+      Array.prototype.forEach.call(hwBtns, function(btn) {
+        btn.addEventListener('click', function() {
+          var code = btn.getAttribute('data-keyevent');
+          var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+          var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' shell input keyevent ' + code;
+          appendLog('执行按键: ' + cmd);
+          NativeShell.execSync(cmd);
+          showToast('已发送硬件按键 (' + code + ')');
+        });
+      });
+
+      var apkInput = document.getElementById('hiddenApkInput');
+      var fileInput = document.getElementById('hiddenFileInput');
+
+      document.getElementById('btnInstallApk').addEventListener('click', function() { apkInput.click(); });
+      apkInput.addEventListener('change', function(e) {
+        var f = e.target.files ? e.target.files[0] : null;
+        var filePath = f ? (f.path || e.target.value) : e.target.value;
+        if (!filePath) return;
+        var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+        var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' install -r "' + filePath + '"';
+        appendLog('安装应用: ' + cmd);
+        showToast('正在安装 APK...');
+        setTimeout(function() {
+          var res = NativeShell.execSync(cmd);
+          appendLog(res.output || '安装指令已执行');
+          showToast(res.output.indexOf('Success') !== -1 ? '应用安装成功！' : '安装指令已执行');
+        }, 50);
+      });
+
+      document.getElementById('btnPushFile').addEventListener('click', function() { fileInput.click(); });
+      fileInput.addEventListener('change', function(e) {
+        var f = e.target.files ? e.target.files[0] : null;
+        var filePath = f ? (f.path || e.target.value) : e.target.value;
+        if (!filePath) return;
+        var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+        var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' push "' + filePath + '" /sdcard/Download/';
+        appendLog('推送文件: ' + cmd);
+        var res = NativeShell.execSync(cmd);
+        appendLog(res.output || '推送完成');
+        showToast('文件已推送至手机 Download 目录');
+      });
+
+      document.getElementById('btnScreenshot').addEventListener('click', function() {
+        var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+        var fileName = 'screenshot_' + new Date().getTime() + '.png';
+        var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' exec-out screencap -p > "' + fileName + '"';
+        appendLog('执行截屏: ' + cmd);
+        NativeShell.execSync(cmd);
+        showToast('截屏已保存为 ' + fileName);
+      });
+
+      document.getElementById('btnTurnScreenOffNow').addEventListener('click', function() {
+        var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+        var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' shell input keyevent 26';
+        appendLog('切换屏幕亮灭: ' + cmd);
+        NativeShell.execSync(cmd);
+        showToast('已发送电源亮灭屏指令');
+      });
+
+      document.getElementById('btnEnableTcpip5555').addEventListener('click', function() {
+        var serialArg = (state.selectedSerial && state.selectedSerial.indexOf('_default') === -1) ? ('-s ' + state.selectedSerial) : '';
+        var cmd = quoteExe(state.adbPath) + ' ' + serialArg + ' tcpip 5555';
+        appendLog('开启无线端口: ' + cmd);
+        var res = NativeShell.execSync(cmd);
+        appendLog(res.output || 'restarting in TCP mode port: 5555');
+        showToast('已开启手机 5555 无线调试端口');
+      });
+
+      document.getElementById('btnExecutePair').addEventListener('click', function() {
+        var ip = document.getElementById('inputWirelessIp').value.split(':')[0];
+        var port = document.getElementById('inputPairPort').value.replace(/^\s+|\s+$/g, '');
+        var code = document.getElementById('inputPairCode').value.replace(/^\s+|\s+$/g, '');
+        var cmd = quoteExe(state.adbPath) + ' pair ' + ip + ':' + port + ' ' + code;
+        appendLog('执行无线配对: ' + cmd);
+        var res = NativeShell.execSync(cmd);
+        appendLog(res.output || '配对指令已执行');
+        showToast('无线配对指令已执行');
+      });
+
+      document.getElementById('btnExecuteConnect').addEventListener('click', function() {
+        var addr = document.getElementById('inputWirelessIp').value.replace(/^\s+|\s+$/g, '');
+        var cmd = quoteExe(state.adbPath) + ' connect ' + addr;
+        appendLog('执行无线连接: ' + cmd);
+        var res = NativeShell.execSync(cmd);
+        appendLog(res.output || ('connected to ' + addr));
+        showToast('已尝试连接 ' + addr);
+        scanAdbDevices();
+      });
+
+      document.getElementById('btnCopyCliTop').addEventListener('click', function() {
+        var cmd = buildScrcpyCommand();
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = cmd;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('已复制启动指令');
+        } catch (e) {}
+      });
+
+      document.getElementById('btnClearLog').addEventListener('click', function() {
+        document.getElementById('consoleLogBox').innerHTML = '';
+        showToast('日志已清空');
+      });
+
+      // Path Config & Auto Download Modal
+      var pathModal = document.getElementById('pathConfigModal');
+      document.getElementById('btnTogglePathModal').addEventListener('click', function() {
+        pathModal.classList.remove('hidden');
+      });
+      document.getElementById('btnClosePathModal').addEventListener('click', function() {
+        pathModal.classList.add('hidden');
+      });
+      document.getElementById('btnAutoDownloadScrcpy').addEventListener('click', autoDownloadOfficialScrcpy);
+
+      // Browse Buttons for scrcpy.exe & adb.exe
+      var browseScrcpy = document.getElementById('hiddenBrowseScrcpyInput');
+      var browseAdb = document.getElementById('hiddenBrowseAdbInput');
+      document.getElementById('btnBrowseScrcpy').addEventListener('click', function() { browseScrcpy.click(); });
+      browseScrcpy.addEventListener('change', function(e) {
+        var val = e.target.value;
+        if (val) {
+          document.getElementById('inputScrcpyPath').value = val;
+          // Also auto-fill adb.exe in the same folder
+          var lastSlash = val.lastIndexOf('\\');
+          if (lastSlash !== -1) {
+            var folder = val.substring(0, lastSlash);
+            document.getElementById('inputAdbPath').value = folder + '\\adb.exe';
+          }
+        }
+      });
+      document.getElementById('btnBrowseAdb').addEventListener('click', function() { browseAdb.click(); });
+      browseAdb.addEventListener('change', function(e) {
+        if (e.target.value) {
+          document.getElementById('inputAdbPath').value = e.target.value;
+        }
+      });
+
+      document.getElementById('btnSavePaths').addEventListener('click', function() {
+        state.scrcpyPath = document.getElementById('inputScrcpyPath').value.replace(/^\s+|\s+$/g, '') || 'scrcpy.exe';
+        state.adbPath = document.getElementById('inputAdbPath').value.replace(/^\s+|\s+$/g, '') || 'adb.exe';
+        try {
+          if (window.localStorage) {
+            window.localStorage.setItem('neu_scrcpy_path', state.scrcpyPath);
+            window.localStorage.setItem('neu_adb_path', state.adbPath);
+          }
+        } catch (e) {}
+        pathModal.classList.add('hidden');
+        scanAdbDevices();
+      });
+    });
+  </script>
+</body>
+</html>
